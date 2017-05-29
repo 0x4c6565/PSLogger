@@ -31,9 +31,10 @@ More log providers can be added via ``Add-LogProvider``:
 
 ## Basic Usage
 
+> Logger.Info "some information"
+
 > "LOL" | Logger.Info
 
 > "nope","errorz" | Logger.Error
 
-> Logger.Trace -Messages "down the rabbit hole"
-
+> Logger.Trace -Messages "down the rabbit hole","and back out again"
