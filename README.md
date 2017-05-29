@@ -1,36 +1,39 @@
 # powershell-logging-module
-Very basic logging module
-
-Importing Module:
-
->Import-Module C:\Path\To\PSLogger.psm1
+A logging module for PowerShell
 
 
-Basic Usage:
+## Importing Module
+
+> Import-Module C:\Path\To\PSLogger.psm1
 
 
->"LOL" | Logger.Info
+## Log Providers:
+
+One or more log providers must be added into the logger before any logging will be possible.
+
+The module has one pre-defined log provider, FileLogProvider, which can be added via ``Add-FileLogProvider``:
+
+> Add-FileLogProvider [-LogName] [-LogPath] [-Level] [-MessageFormat]
+
+* ``LogName``: Name of logfile (Default: MyScript)
+* ``LogPath``: Path of log file (Default: $Env:TEMP)
+* ``Level``: Minimum log level (Default: INFO)
+* ``MessageFormat``: Format of logfile (Default: {{date}} - {{level}} - [{{stack}}] --> {{message}})
+
+More log providers can be added via ``Add-LogProvider``:
+
+> Add-LogProvider [-ScriptBlock] [-Level] [-MessageFormat]
+
+* ``ScriptBlock``: A scriptblock with a single parameter ``Message``, which will be invoked by the logger
+* ``Level``: Minimum log level
+* ``MessageFormat``: Format of logfile, with replaceable tokens e.g. ``{{date}} - {{message}}``
+
+
+## Basic Usage
+
+> "LOL" | Logger.Info
 
 > "nope","errorz" | Logger.Error
 
 > Logger.Trace -Messages "down the rabbit hole"
 
-Configuration:
-
-
-Set-Log [-LogName]  [-LogExtension]  [-LogLevel]  [-LogPath]  [-LogMessageFormat] 
-
-
-> LogName: Name of logfile (Default: MyScript)
-
-> LogExtension: Extension of logfile (Default: log)
-
-> LogLevel: Level of logging (Default: INFO)
-
-> LogPath: Path of log file (Default: $Env:TEMP)
-
-> LogMessageFormat: Format of logfile (Default: {{date}} - {{level}} - [{{stack}}] --> {{message}})
-
-
-
-This is a very basic logger, and has no advanced functionality such as log rotation
