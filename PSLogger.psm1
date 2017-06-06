@@ -1,56 +1,125 @@
 ﻿$Global:LogLevels = @("TRACE","DEBUG","INFO","WARN","ERROR")
 $Global:LogProviders = @()
 
-function Add-LogProvider
+function Validate-LogLevel($Level)
 {
-    Param
-    (
-        [scriptblock]$ScriptBlock,
-        [string]$Level,
-        [string]$MessageFormat
-    )
-    
-    Validate-LogLevel -LogLevel $LogLevel
-
-    $LogProvider = New-Object -TypeName PSObject -Property `
-    @{
-        ScriptBlock = $ScriptBlock
-        Level = $Level
-        MessageFormat = $MessageFormat
-    }
-
-    $Global:LogProviders += $LogProvider
-}
-
-function Add-FileLogProvider
-{
-    Param
-    (
-        $LogName = "MyScript",
-        $LogPath = $env:TEMP,
-        $Level = "INFO",
-        $MessageFormat = "{{date}} - {{level}} - [{{stack}}] --> {{message}}" 
-    )
-
-    $ScriptBlock = [scriptblock]::Create("
-    Param
-    (
-        `$Message
-    )
-    Add-Content -Path (`"{0}.log`" -f ([System.IO.Path]::Combine(`"$LogPath`", `"$LogName`"))) -Value `$Message")
-
-    Add-LogProvider -ScriptBlock $ScriptBlock -Level $Level -MessageFormat $MessageFormat
-}
-
-function Validate-LogLevel
-{
-    if (($Global:LogLevels -contains $LogLevel) -eq $false)
+    if (($Global:LogLevels -contains $Level) -eq $false)
     {
         throw ("Invalid log level, valid values [{0}]" -f $Globals:LogLevels -join "; ")
     }
 }
 
-function Logger.Log
+function Add-LoggerProvider
+{
+    Param
+    (
+        [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelinebyPropertyName=$true)][scriptblock]$Invoke,
+        [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelinebyPropertyName=$true)][string]$MinLevel,
+        [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelinebyPropertyName=$true)][string]$MessageFormat,
+        [Parameter(Mandatory=$false)][hashtable]$Parameters = @{}
+    )
+    
+    Validate-LogLevel -Level $MinLevel
+
+    $LogProvider = New-Object -TypeName PSObject -Property `
+    @{
+        Invoke = $Invoke
+        MinLevel = $MinLevel
+        MessageFormat = $MessageFormat
+        Parameters = $Parameters
+    }
+
+    $Global:LogProviders += $LogProvider
+}
+
+function Add-LoggerFileProvider
+{
+    Param
+    (
+        $LogName = "MyScript",
+        $LogPath = $env:TEMP,
+        $MinLevel = "INFO",
+        $MessageFormat = "{{date}} - {{level}} - [{{stack}}] --> {{message}}"
+    )
+
+    Add-LoggerProvider -Invoke ${Function:Fire-LoggerFileProvider} -MinLevel $MinLevel -MessageFormat $MessageFormat -Parameters @{LogPath=$LogPath; LogName=$LogName}
+}
+
+function Add-LoggerEmailProvider
+{
+
+}
+
+function Add-LoggerRestProvider
+{
+
+}
+
+function Add-LoggerStreamsProvider
+{
+    Param
+    (
+        $MinLevel = "TRACE",
+        $MessageFormat = "{{date}} - {{level}} - [{{stack}}] --> {{message}}"
+    )
+
+    Add-LoggerProvider -Invoke ${Function:Fire-LoggerStreamsProvider} -MinLevel $MinLevel -MessageFormat $MessageFormat
+}
+
+function Fire-LoggerFileProvider
+{
+    Param
+    (
+        $Message,
+        $Level,
+        $Parameters
+    )
+
+    Add-Content -Path ("{0}.log" -f ([System.IO.Path]::Combine("$($Parameters.LogPath)", "$($Parameters.LogName)"))) -Value $Message
+}
+
+function Fire-LoggerStreamsProvider
+{
+    Param
+    (
+        $Message,
+        $Level
+    )
+
+    switch ($Level)
+    {
+        "TRACE"
+        {
+            Write-Debug -Message $Message
+        }
+        "DEBUG"
+        {
+            Write-Debug -Message $Message
+        }
+        "INFO"
+        {
+            Write-Output -InputObject $Message
+        }
+        "WARN"
+        {
+            Write-Warning -Message $Message
+        }
+        "ERROR"
+        {
+            Write-Error -Message $Message
+        }
+        "FATAL"
+        {
+            Write-Error -Message $Message
+        }
+        default
+        {
+            Write-Output -InputObject $Message
+        }
+    }
+}
+
+function Write-Logger
 {
     [CmdletBinding()]
     Param
@@ -62,29 +131,29 @@ function Logger.Log
 
     Process
     {
+        $Date = Get-Date
+        $CallStack = (Get-CallStack -ScopeOffset ($ScopeOffset + 1))
+
         foreach ($LogProvider in $Global:LogProviders)
         {
-            if ([array]::IndexOf($Global:LogLevels,$LogProvider.Level) -le [array]::IndexOf($Global:LogLevels,$Level))
+            if ([array]::IndexOf($Global:LogLevels,$LogProvider.MinLevel) -le [array]::IndexOf($Global:LogLevels,$Level))
             {
                 foreach ($Message in $Messages)
                 {
-                    $LogHash = @{
+                    $InvokeParameters = @{
+                        Message = (Format-LoggerMessage -Log @{Level=$Level;Date=$Date;Stack=$CallStack;Message=$Message} -MessageFormat $LogProvider.MessageFormat)
                         Level = $Level
-                        Date = Get-Date
-                        Stack = (Generate-Stack -ScopeOffset ($ScopeOffset + 1))
-                        Message = $Message
+                        Parameters = $LogProvider.Parameters
                     }
 
-                    $FormattedMessage = Format-Message -Message $LogProvider.MessageFormat -LogHash $LogHash
-
-                    & $LogProvider.ScriptBlock -Message $FormattedMessage
+                    & $LogProvider.Invoke @InvokeParameters
                 }
             }
         }
     }
 }
 
-function Generate-Stack
+function Get-CallStack
 {
     Param
     (
@@ -98,41 +167,31 @@ function Generate-Stack
     {
         $Stack += (Split-Path -Path $CallerInvocation.Value.ScriptName -Leaf)
     }
+    else
+    {
+        $Stack += "Interactive"
+    }
 
     return (($Stack -join "::") + "($($CallerInvocation.Value.ScriptLineNumber))")
 }
 
-function Format-Message
+function Format-LoggerMessage
 {
     Param
     (
-        [Parameter(Mandatory=$true)]$Message,
-        [Parameter(Mandatory=$true)]$LogHash
+        [Parameter(Mandatory=$true)][hashtable]$Log,
+        [Parameter(Mandatory=$true)][string]$MessageFormat
     )
 
-    foreach ($KV in $LogHash.GetEnumerator())
+    foreach ($KV in $Log.GetEnumerator())
     {
-        $Message = $Message -replace "{{$($KV.Key)}}", $KV.Value
+        $MessageFormat = $MessageFormat -replace "{{$($KV.Key)}}", $KV.Value
     }
 
-    return $Message
+    return $MessageFormat
 }
 
-function Logger.Trace
-{
-    [CmdletBinding()]
-    Param
-    (
-        [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelinebyPropertyName=$true)][string[]]$Messages
-    )
-
-    Process
-    {
-        Logger.Log -Level "TRACE" -Messages $Messages -ScopeOffset 1
-    }
-}
-
-function Logger.Debug
+function Write-LoggerTrace
 {
     [CmdletBinding()]
     Param
@@ -142,11 +201,11 @@ function Logger.Debug
 
     Process
     {
-        Logger.Log -Level "DEBUG" -Messages $Messages -ScopeOffset 1
+        Write-Logger -Level "TRACE" -Messages $Messages -ScopeOffset 1
     }
 }
 
-function Logger.Info
+function Write-LoggerDebug
 {
     [CmdletBinding()]
     Param
@@ -156,11 +215,11 @@ function Logger.Info
 
     Process
     {
-        Logger.Log -Level "INFO" -Messages $Messages -ScopeOffset 1
+        Write-Logger -Level "DEBUG" -Messages $Messages -ScopeOffset 1
     }
 }
 
-function Logger.Warn
+function Write-LoggerInfo
 {
     [CmdletBinding()]
     Param
@@ -170,11 +229,11 @@ function Logger.Warn
 
     Process
     {
-        Logger.Log -Level "WARN" -Messages $Messages -ScopeOffset 1
+        Write-Logger -Level "INFO" -Messages $Messages -ScopeOffset 1
     }
 }
 
-function Logger.Error
+function Write-LoggerWarn
 {
     [CmdletBinding()]
     Param
@@ -184,11 +243,25 @@ function Logger.Error
 
     Process
     {
-        Logger.Log -Level "ERROR" -Messages $Messages -ScopeOffset 1
+        Write-Logger -Level "WARN" -Messages $Messages -ScopeOffset 1
     }
 }
 
-function Logger.Fatal
+function Write-LoggerError
+{
+    [CmdletBinding()]
+    Param
+    (
+        [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelinebyPropertyName=$true)][string[]]$Messages
+    )
+
+    Process
+    {
+        Write-Logger -Level "ERROR" -Messages $Messages -ScopeOffset 1
+    }
+}
+
+function Write-LoggerFatal
 {
     [CmdletBinding()]
     Param
@@ -199,7 +272,7 @@ function Logger.Fatal
 
     Process
     {
-        Logger.Log -Level "FATAL" -Messages $Messages -ScopeOffset 1
+        Write-Logger -Level "FATAL" -Messages $Messages -ScopeOffset 1
     }
 
     End
@@ -208,12 +281,20 @@ function Logger.Fatal
     }
 }
 
-Export-ModuleMember -Function "Add-LogProvider"
-Export-ModuleMember -Function "Add-FileLogProvider"
-Export-ModuleMember -Function "Logger.Log"
-Export-ModuleMember -Function "Logger.Trace"
-Export-ModuleMember -Function "Logger.Debug"
-Export-ModuleMember -Function "Logger.Info"
-Export-ModuleMember -Function "Logger.Warn"
-Export-ModuleMember -Function "Logger.Error"
-Export-ModuleMember -Function "Logger.Fatal"
+Export-ModuleMember -Function "Add-LoggerProvider"
+Export-ModuleMember -Function "Add-LoggerFileProvider"
+Export-ModuleMember -Function "Add-LoggerStreamsProvider"
+Export-ModuleMember -Function "Write-LoggerTrace"
+Export-ModuleMember -Function "Write-LoggerDebug"
+Export-ModuleMember -Function "Write-LoggerInfo"
+Export-ModuleMember -Function "Write-LoggerWarn"
+Export-ModuleMember -Function "Write-LoggerError"
+Export-ModuleMember -Function "Write-LoggerFatal"
+
+Set-Alias -Name "Logger.Trace" -Value "Write-LoggerTrace"
+Set-Alias -Name "Logger.Debug" -Value "Write-LoggerDebug"
+Set-Alias -Name "Logger.Info" -Value "Write-LoggerInfo"
+Set-Alias -Name "Logger.Warn" -Value "Write-LoggerWarn"
+Set-Alias -Name "Logger.Error" -Value "Write-LoggerError"
+Set-Alias -Name "Logger.Fatal" -Value "Write-LoggerFatal"
+Export-ModuleMember -Alias *
