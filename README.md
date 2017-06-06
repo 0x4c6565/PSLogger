@@ -41,10 +41,15 @@ More log providers can be added via ``Add-LogProvider``:
 ### Commands
 
 > Write-LoggerTrace [-Messages]
+
 > Write-LoggerDebug [-Messages]
+
 > Write-LoggerInfo [-Messages]
+
 > Write-LoggerWarn [-Messages]
+
 > Write-LoggerError [-Messages]
+
 > Write-LoggerFatal [-Messages] [-ExitCode]
 
 ### Aliases
@@ -52,10 +57,15 @@ More log providers can be added via ``Add-LogProvider``:
 Aliases are also defined for writing logs:
 
 > ``Logger.Trace``
+
 > ``Logger.Debug``
+
 > ``Logger.Info``
+
 > ``Logger.Warn``
+
 > ``Logger.Error``
+
 > ``Logger.Fatal``
 
 ### Examples
