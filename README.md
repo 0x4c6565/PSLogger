@@ -30,7 +30,7 @@ More log providers can be added via ``Add-LogProvider``:
 
 > Add-LogProvider [-Invoke] [-MinLevel] [-MessageFormat] [-Parameters]
 
-* ``Invoke``: A scriptblock with a parameter ``Message``, which will be invoked by the logger. ``Level`` and ``Parameters`` parameters will be passed also, if required
+* ``Invoke``: A scriptblock with a parameter ``Message``, which will be invoked by the logger. ``Level`` and ``Parameters`` parameters will be passed also, if available
 * ``MinLevel``: Minimum log level
 * ``MessageFormat``: Format of logfile, with replaceable tokens e.g. ``{{date}} - {{message}}``
 * ``Parameters`` (Optional): A hashtable of parameters which will be passed into Invoke
