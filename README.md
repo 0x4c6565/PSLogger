@@ -7,29 +7,31 @@ A logging module for PowerShell
 > Import-Module C:\Path\To\PSLogger.psm1
 
 
-## Log Providers:
+## Log Targets:
 
-One or more log providers must be added into the logger before any logging will be possible.
+One or more log targets must be added into the logger before any logging will be possible.
 
-The module has several pre-defined log providers, outlined below:
+The module has several pre-defined log targets, outlined below:
 
-### FileLogProvider
+### FileLoggerTarget
 
-This provider will log to a single log file, and can be added via ``Add-FileLogProvider``:
+This target will log to a single log file, and can be added via ``Add-FileLoggerTarget``:
 
-> Add-FileLogProvider [-LogName] [-LogPath] [-MinLevel] [-MessageFormat]
+> Add-FileLoggerTarget [-Name] [-LogName] [-LogPath] [-MinLevel] [-MessageFormat]
 
+* ``Name``: A unique name for the target
 * ``LogName``: Name of logfile (Default: MyScript)
 * ``LogPath``: Path of log file (Default: $Env:TEMP)
 * ``MinLevel``: Minimum log level (Default: INFO)
 * ``MessageFormat``: Format of logfile (Default: {{date}} - {{level}} - [{{stack}}] --> {{message}})
 
-### Custom log provider
+### Custom target
 
-More log providers can be added via ``Add-LogProvider``:
+More log targets can be added via ``Add-LoggerTarget``:
 
-> Add-LogProvider [-Invoke] [-MinLevel] [-MessageFormat] [-Parameters]
+> Add-LoggerTarget [-Name] [-Invoke] [-MinLevel] [-MessageFormat] [-Parameters]
 
+* ``Name``: A unique name for the target
 * ``Invoke``: A scriptblock with a parameter ``Message``, which will be invoked by the logger. ``Level`` and ``Parameters`` parameters will be passed also, if available
 * ``MinLevel``: Minimum log level
 * ``MessageFormat``: Format of logfile, with replaceable tokens e.g. ``{{date}} - {{message}}``
@@ -40,17 +42,17 @@ More log providers can be added via ``Add-LogProvider``:
 
 ### Commands
 
-> Write-LoggerTrace [-Messages]
+> Write-LoggerTrace [-Message]
 
-> Write-LoggerDebug [-Messages]
+> Write-LoggerDebug [-Message]
 
-> Write-LoggerInfo [-Messages]
+> Write-LoggerInfo [-Message]
 
-> Write-LoggerWarn [-Messages]
+> Write-LoggerWarn [-Message]
 
-> Write-LoggerError [-Messages]
+> Write-LoggerError [-Message]
 
-> Write-LoggerFatal [-Messages] [-ExitCode]
+> Write-LoggerFatal [-Message] [-ExitCode]
 
 ### Aliases
 
@@ -70,12 +72,5 @@ Aliases are also defined for writing logs:
 
 ### Examples
 
-> Write-LoggerInfo "Testing log"
-
-> Write-LoggerInfo "some information"
-
-> "some more information" | Write-LoggerInfo
-
-> "an error occurred","oops" | Write-LoggerError
-
-> Write-LoggerTrace -Messages "down the rabbit hole","and back out again"
+Write-LoggerInfo "Testing log"
+"an error occurred","oops" | Write-LoggerError
