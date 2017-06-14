@@ -49,6 +49,7 @@ function Add-LoggerTarget
         [Parameter(Mandatory=$true)][scriptblock]$Invoke,
         [Parameter(Mandatory=$true)][string]$MinLevel,
         [Parameter(Mandatory=$true)][string]$MessageFormat,
+        [Parameter(Mandatory=$false)][bool]$Passive,
         [Parameter(Mandatory=$false)][hashtable]$Parameters = @{}
 
     )
@@ -66,6 +67,7 @@ function Add-LoggerTarget
         Invoke = $Invoke
         MinLevel = $MinLevel
         MessageFormat = $MessageFormat
+        Passive = $Passive
         Parameters = $Parameters
     }
 
@@ -80,10 +82,11 @@ function Add-LoggerFileTarget
         [Parameter(Mandatory=$true)]$LogName,
         [Parameter(Mandatory=$false)]$LogPath = $env:TEMP,
         [Parameter(Mandatory=$false)]$MinLevel = "INFO",
-        [Parameter(Mandatory=$false)]$MessageFormat = "{{date}} - {{level}} - [{{stack}}] --> {{message}}"
+        [Parameter(Mandatory=$false)]$MessageFormat = "{{date}} - {{level}} - [{{stack}}] --> {{message}}",
+        [Parameter(Mandatory=$false)][bool]$Passive
     )
 
-    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerFileTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat -Parameters @{LogPath=$LogPath; LogName=$LogName}
+    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerFileTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat -Passive $Passive -Parameters @{LogPath=$LogPath; LogName=$LogName}
 }
 
 function Fire-LoggerFileTarget
@@ -104,10 +107,11 @@ function Add-LoggerStreamsTarget
     (
         [Parameter(Mandatory=$true)]$Name,
         [Parameter(Mandatory=$false)]$MinLevel = "TRACE",
-        [Parameter(Mandatory=$false)]$MessageFormat = "{{date}} - {{level}} - [{{stack}}] --> {{message}}"
+        [Parameter(Mandatory=$false)]$MessageFormat = "{{date}} - {{level}} - [{{stack}}] --> {{message}}",
+        [Parameter(Mandatory=$false)][bool]$Passive
     )
 
-    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerStreamsTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat
+    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerStreamsTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat -Passive $Passive
 }
 
 function Fire-LoggerStreamsTarget
@@ -161,6 +165,31 @@ function Add-LoggerRestTarget
 
 }
 
+function Add-LoggerHostTarget
+{
+    Param
+    (
+        [Parameter(Mandatory=$true)]$Name,
+        [Parameter(Mandatory=$false)]$MinLevel = "TRACE",
+        [Parameter(Mandatory=$false)]$MessageFormat = "{{date}} - {{level}} - [{{stack}}] --> {{message}}",
+        [Parameter(Mandatory=$false)][bool]$Passive,
+        [Parameter(Mandatory=$false)][System.ConsoleColor]$ForegroundColor = [System.ConsoleColor]::Yellow
+    )
+
+    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerHostTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat -Passive $Passive -Parameters @{ForegroundColor=$ForegroundColor}
+}
+
+function Fire-LoggerHostTarget
+{
+    Param
+    (
+        $Message,
+        $Parameters
+    )
+
+    Write-Host -ForegroundColor $($Parameters.ForegroundColor) -Object $Message
+}
+
 function Write-Logger
 {
     [CmdletBinding()]
@@ -182,7 +211,7 @@ function Write-Logger
         }
         else
         {
-            $Targets = $Script:LoggerTargets
+            $Targets = Get-LoggerTarget | ? {$_.Passive -eq $false}
         }
     }
 
@@ -352,6 +381,7 @@ Export-ModuleMember -Function "Test-LoggerTarget"
 Export-ModuleMember -Function "Add-LoggerTarget"
 Export-ModuleMember -Function "Add-LoggerFileTarget"
 Export-ModuleMember -Function "Add-LoggerStreamsTarget"
+Export-ModuleMember -Function "Add-LoggerHostTarget"
 Export-ModuleMember -Function "Write-LoggerTrace"
 Export-ModuleMember -Function "Write-LoggerDebug"
 Export-ModuleMember -Function "Write-LoggerInfo"
