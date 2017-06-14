@@ -24,17 +24,19 @@ This target will log to a single log file, and can be added via ``Add-FileLogger
 * ``LogPath``: Path of log file (Default: $Env:TEMP)
 * ``MinLevel``: Minimum log level (Default: INFO)
 * ``MessageFormat``: Format of logfile (Default: {{date}} - {{level}} - [{{stack}}] --> {{message}})
+* ``Passive``: (Optional) Specifies that target should be passive - target must be explicitly targeted
 
 ### Custom target
 
 More log targets can be added via ``Add-LoggerTarget``:
 
-> Add-LoggerTarget [-Name] [-Invoke] [-MinLevel] [-MessageFormat] [-Parameters]
+> Add-LoggerTarget [-Name] [-Invoke] [-MinLevel] [-MessageFormat] [-Passive] [-Parameters]
 
 * ``Name``: A unique name for the target
 * ``Invoke``: A scriptblock with a parameter ``Message``, which will be invoked by the logger. ``Level`` and ``Parameters`` parameters will be passed also, if available
 * ``MinLevel``: Minimum log level
 * ``MessageFormat``: Format of logfile, with replaceable tokens e.g. ``{{date}} - {{message}}``
+* ``Passive``: (Optional) Specifies that target should be passive - target must be explicitly targeted
 * ``Parameters`` (Optional): A hashtable of parameters which will be passed into Invoke
 
 
@@ -72,5 +74,6 @@ Aliases are also defined for writing logs:
 
 ### Examples
 
-Write-LoggerInfo "Testing log"
-"an error occurred","oops" | Write-LoggerError
+> Write-LoggerInfo "Testing log"
+
+> "an error occurred","oops" | Write-LoggerError
