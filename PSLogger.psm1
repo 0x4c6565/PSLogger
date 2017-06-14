@@ -1,8 +1,6 @@
 ﻿$Script:LogLevels = @("TRACE","DEBUG","INFO","WARN","ERROR")
 $Script:LoggerTargets = @()
 
-#TODO - LOOK AT CMDLET BINDING BEGIN PROCESS END BLOCKS PIPELINE/PARAMETER SPECIFIED!!
-
 function Validate-LogLevel($Level)
 {
     if (($Script:LogLevels -contains $Level) -eq $false)
@@ -216,19 +214,25 @@ function Get-CallStack
         $ScopeOffset=0
     )
 
-    $CallerInvocation = Get-Variable MyInvocation -Scope $ScopeOffset    
-
     $Stack = @()
-    if ([string]::IsNullOrEmpty($CallerInvocation.Value.ScriptName) -eq $false)
+    $CallStack = Get-PSCallStack | Select-Object -Skip ($ScopeOffset+1) -First 1
+
+    $ScriptName = ""
+    if ([string]::IsNullOrEmpty($CallStack.ScriptName) -eq $false)
     {
-        $Stack += (Split-Path -Path $CallerInvocation.Value.ScriptName -Leaf)
+        $Stack += (Split-Path -Path $CallStack.ScriptName -Leaf)
     }
     else
     {
         $Stack += "Interactive"
     }
 
-    return (($Stack -join "::") + "($($CallerInvocation.Value.ScriptLineNumber))")
+    if ($CallStack.FunctionName -ne "<ScriptBlock>")
+    {
+        $Stack += $CallStack.FunctionName
+    }
+
+    return (($Stack -join "::") + "($($CallStack.ScriptLineNumber))")
 }
 
 function Format-LoggerMessage
@@ -258,7 +262,7 @@ function Write-LoggerTrace
 
     Process
     {
-        Write-Logger -Level "TRACE" -Message $Message -ScopeOffset 1 -Target $Target
+        $Message | Write-Logger -Level "TRACE" -ScopeOffset 1 -Target $Target
     }
 }
 
@@ -273,7 +277,7 @@ function Write-LoggerDebug
 
     Process
     {
-        Write-Logger -Level "DEBUG" -Message $Message -ScopeOffset 1 -Target $Target
+        $Message | Write-Logger -Level "DEBUG" -ScopeOffset 1 -Target $Target
     }
 }
 
@@ -288,7 +292,7 @@ function Write-LoggerInfo
 
     Process
     {
-        Write-Logger -Level "INFO" -Message $Message -ScopeOffset 1 -Target $Target
+        $Message | Write-Logger -Level "INFO" -ScopeOffset 1 -Target $Target
     }
 }
 
@@ -303,7 +307,7 @@ function Write-LoggerWarn
 
     Process
     {
-        Write-Logger -Level "WARN" -Message $Message -ScopeOffset 1 -Target $Target
+        $Message | Write-Logger -Level "WARN" -ScopeOffset 1 -Target $Target
     }
 }
 
@@ -318,7 +322,7 @@ function Write-LoggerError
 
     Process
     {
-        Write-Logger -Level "ERROR" -Message $Message -ScopeOffset 1 -Target $Target
+        $Message | Write-Logger -Level "ERROR" -ScopeOffset 1 -Target $Target
     }
 }
 
@@ -334,7 +338,7 @@ function Write-LoggerFatal
 
     Process
     {
-        Write-Logger -Level "FATAL" -Message $Message -ScopeOffset 1 -Target $Target
+        $Message | Write-Logger -Level "FATAL" -ScopeOffset 1 -Target $Target
     }
 
     End
@@ -361,4 +365,4 @@ Set-Alias -Name "Logger.Info" -Value "Write-LoggerInfo"
 Set-Alias -Name "Logger.Warn" -Value "Write-LoggerWarn"
 Set-Alias -Name "Logger.Error" -Value "Write-LoggerError"
 Set-Alias -Name "Logger.Fatal" -Value "Write-LoggerFatal"
-Export-ModuleMember -Alias *
+Export-ModuleMember -Alias Logger.*
