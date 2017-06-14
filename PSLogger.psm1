@@ -49,7 +49,7 @@ function Add-LoggerTarget
         [Parameter(Mandatory=$true)][scriptblock]$Invoke,
         [Parameter(Mandatory=$true)][string]$MinLevel,
         [Parameter(Mandatory=$true)][string]$MessageFormat,
-        [Parameter(Mandatory=$false)][bool]$Passive,
+        [Parameter(Mandatory=$false)][switch]$Passive,
         [Parameter(Mandatory=$false)][hashtable]$Parameters = @{}
 
     )
@@ -83,10 +83,10 @@ function Add-LoggerFileTarget
         [Parameter(Mandatory=$false)]$LogPath = $env:TEMP,
         [Parameter(Mandatory=$false)]$MinLevel = "INFO",
         [Parameter(Mandatory=$false)]$MessageFormat = "{{date}} - {{level}} - [{{stack}}] --> {{message}}",
-        [Parameter(Mandatory=$false)][bool]$Passive
+        [Parameter(Mandatory=$false)][switch]$Passive
     )
 
-    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerFileTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat -Passive $Passive -Parameters @{LogPath=$LogPath; LogName=$LogName}
+    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerFileTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat -Passive:$Passive -Parameters @{LogPath=$LogPath; LogName=$LogName}
 }
 
 function Fire-LoggerFileTarget
@@ -108,10 +108,10 @@ function Add-LoggerStreamsTarget
         [Parameter(Mandatory=$true)]$Name,
         [Parameter(Mandatory=$false)]$MinLevel = "TRACE",
         [Parameter(Mandatory=$false)]$MessageFormat = "{{date}} - {{level}} - [{{stack}}] --> {{message}}",
-        [Parameter(Mandatory=$false)][bool]$Passive
+        [Parameter(Mandatory=$false)][switch]$Passive
     )
 
-    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerStreamsTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat -Passive $Passive
+    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerStreamsTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat -Passive:$Passive
 }
 
 function Fire-LoggerStreamsTarget
@@ -172,11 +172,11 @@ function Add-LoggerHostTarget
         [Parameter(Mandatory=$true)]$Name,
         [Parameter(Mandatory=$false)]$MinLevel = "TRACE",
         [Parameter(Mandatory=$false)]$MessageFormat = "{{date}} - {{level}} - [{{stack}}] --> {{message}}",
-        [Parameter(Mandatory=$false)][bool]$Passive,
+        [Parameter(Mandatory=$false)][switch]$Passive,
         [Parameter(Mandatory=$false)][System.ConsoleColor]$ForegroundColor = [System.ConsoleColor]::Yellow
     )
 
-    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerHostTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat -Passive $Passive -Parameters @{ForegroundColor=$ForegroundColor}
+    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerHostTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat -Passive:$Passive -Parameters @{ForegroundColor=$ForegroundColor}
 }
 
 function Fire-LoggerHostTarget
