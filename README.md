@@ -13,14 +13,25 @@ One or more log targets must be added into the logger before any logging will be
 
 The module has several pre-defined log targets, outlined below:
 
-### FileLoggerTarget
+### File Target
 
-This target will log to a single log file, and can be added via ``Add-FileLoggerTarget``:
+This target will log to a single log file
 
-> Add-FileLoggerTarget [-Name] [-LogPath] [-MinLevel] [-MessageFormat]
+> Add-LoggerFileTarget [-Name] [-LogPath] [-MinLevel] [-MessageFormat] [-Passive]
 
 * ``Name``: A unique name for the target
 * ``LogPath``: (Optional) Path of log file (Default: $Env:TEMP\{Name}.log)
+* ``MinLevel``: (Optional) Minimum log level (Default: INFO)
+* ``MessageFormat``: (Optional) Format of logfile (Default: {{date}} - {{level}} - [{{stack}}] --> {{message}})
+* ``Passive``: (Optional) Specifies that target should be passive - target must be explicitly targeted
+
+### Host Target
+
+This target will log to a single log file
+
+> Add-LoggerHostTarget [-Name] [-MinLevel] [-MessageFormat] [-Passive]
+
+* ``Name``: A unique name for the target
 * ``MinLevel``: (Optional) Minimum log level (Default: INFO)
 * ``MessageFormat``: (Optional) Format of logfile (Default: {{date}} - {{level}} - [{{stack}}] --> {{message}})
 * ``Passive``: (Optional) Specifies that target should be passive - target must be explicitly targeted
