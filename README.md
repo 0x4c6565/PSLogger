@@ -11,43 +11,35 @@ A logging module for PowerShell
 
 One or more log targets must be added into the logger before any logging will be possible.
 
-The module has several pre-defined log targets, outlined below:
+The module has several pre-defined log targets, each sharing the following common parameters:
+
+* ``Name``: (Required) A unique name for the target
+* ``MinLevel``: Minimum log level (Default: INFO)
+* ``MessageFormat``: Format of log message (Default: {{date}} - {{level}} - [{{stack}}] --> {{message}})
+* ``Passive``: Specifies that target should be passive - target must be explicitly targeted
 
 ### File Target
 
 This target will log to a single log file
 
-> Add-LoggerFileTarget [-Name] [-LogPath] [-MinLevel] [-MessageFormat] [-Passive]
+> Add-LoggerFileTarget [-Name] [-MinLevel] [-MessageFormat] [-Passive] [-LogPath]
 
-* ``Name``: A unique name for the target
-* ``LogPath``: (Optional) Path of log file (Default: $Env:TEMP\{Name}.log)
-* ``MinLevel``: (Optional) Minimum log level (Default: INFO)
-* ``MessageFormat``: (Optional) Format of logfile (Default: {{date}} - {{level}} - [{{stack}}] --> {{message}})
-* ``Passive``: (Optional) Specifies that target should be passive - target must be explicitly targeted
+* ``LogPath``: Path of log file (Default: $Env:TEMP\{Name}.log)
 
 ### Host Target
 
-This target will log to a single log file
+This target will output to host
 
 > Add-LoggerHostTarget [-Name] [-MinLevel] [-MessageFormat] [-Passive]
-
-* ``Name``: A unique name for the target
-* ``MinLevel``: (Optional) Minimum log level (Default: INFO)
-* ``MessageFormat``: (Optional) Format of logfile (Default: {{date}} - {{level}} - [{{stack}}] --> {{message}})
-* ``Passive``: (Optional) Specifies that target should be passive - target must be explicitly targeted
 
 ### Custom target
 
 More log targets can be added via ``Add-LoggerTarget``:
 
-> Add-LoggerTarget [-Name] [-Invoke] [-MinLevel] [-MessageFormat] [-Passive] [-Parameters]
+> Add-LoggerTarget [-Name] [-MinLevel] [-MessageFormat] [-Passive] [-Invoke] [-Parameters]
 
-* ``Name``: A unique name for the target
-* ``Invoke``: A scriptblock with a parameter ``Message``, which will be invoked by the logger. ``Level`` and ``Parameters`` parameters will be passed also, if available
-* ``MinLevel``: Minimum log level
-* ``MessageFormat``: Format of logfile, with replaceable tokens e.g. ``{{date}} - {{message}}``
-* ``Passive``: (Optional) Specifies that target should be passive - target must be explicitly targeted
-* ``Parameters`` (Optional): A hashtable of parameters which will be passed into Invoke
+* ``Invoke``: (Required) A scriptblock with a parameter ``Message``, which will be invoked by the logger. ``Level`` and ``Parameters`` parameters will be passed also, if available
+* ``Parameters`` A hashtable of parameters which will be passed into Invoke
 
 
 ## Basic Usage
