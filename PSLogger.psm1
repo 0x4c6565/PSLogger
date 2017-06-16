@@ -105,60 +105,6 @@ function Fire-LoggerFileTarget
     Add-Content -Path $Parameters.LogPath -Value $Message
 }
 
-function Add-LoggerStreamsTarget
-{
-    Param
-    (
-        [Parameter(Mandatory=$true)]$Name,
-        [Parameter(Mandatory=$false)]$MinLevel = "TRACE",
-        [Parameter(Mandatory=$false)]$MessageFormat = "{{date}} - {{level}} - [{{stack}}] --> {{message}}",
-        [Parameter(Mandatory=$false)][switch]$Passive
-    )
-
-    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerStreamsTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat -Passive:$Passive
-}
-
-function Fire-LoggerStreamsTarget
-{
-    Param
-    (
-        $Message,
-        $Level
-    )
-
-    switch ($Level)
-    {
-        "TRACE"
-        {
-            Write-Debug -Message $Message
-        }
-        "DEBUG"
-        {
-            Write-Debug -Message $Message
-        }
-        "INFO"
-        {
-            Write-Output -InputObject $Message
-        }
-        "WARN"
-        {
-            Write-Warning -Message $Message
-        }
-        "ERROR"
-        {
-            Write-Error -Message $Message
-        }
-        "FATAL"
-        {
-            Write-Error -Message $Message
-        }
-        default
-        {
-            Write-Output -InputObject $Message
-        }
-    }
-}
-
 function Add-LoggerEmailTarget
 {
 
