@@ -1,4 +1,4 @@
-# powershell-logging-module
+# PSLogger
 A logging module for PowerShell
 
 
