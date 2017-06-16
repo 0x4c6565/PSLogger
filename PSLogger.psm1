@@ -9,9 +9,9 @@ function Validate-LogLevel($Level)
     }
 }
 
-function Get-LoggerTarget($Name)
+function Get-LoggerTarget($Name=$null)
 {
-    if ([string]::IsNullOrEmpty($Name) -eq $false)
+    if ($Name -ne $null)
     {
         $FoundTargets = ($Script:LoggerTargets | ? {$_.Name -like $Name})
         if ($FoundTargets -eq $null)
@@ -79,14 +79,18 @@ function Add-LoggerFileTarget
     Param
     (
         [Parameter(Mandatory=$true)]$Name,
-        [Parameter(Mandatory=$true)]$LogName,
-        [Parameter(Mandatory=$false)]$LogPath = $env:TEMP,
+        [Parameter(Mandatory=$false)]$LogPath,
         [Parameter(Mandatory=$false)]$MinLevel = "INFO",
         [Parameter(Mandatory=$false)]$MessageFormat = "{{date}} - {{level}} - [{{stack}}] --> {{message}}",
         [Parameter(Mandatory=$false)][switch]$Passive
     )
 
-    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerFileTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat -Passive:$Passive -Parameters @{LogPath=$LogPath; LogName=$LogName}
+    if ([string]::IsNullOrEmpty($LogPath))
+    {
+        $LogPath = ("{0}.log" -f [System.IO.Path]::Combine($env:TEMP, $Name))
+    }
+
+    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerFileTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat -Passive:$Passive -Parameters @{LogPath=$LogPath}
 }
 
 function Fire-LoggerFileTarget
@@ -98,7 +102,7 @@ function Fire-LoggerFileTarget
         $Parameters
     )
 
-    Add-Content -Path ("{0}.log" -f ([System.IO.Path]::Combine("$($Parameters.LogPath)", "$($Parameters.LogName)"))) -Value $Message
+    Add-Content -Path $Parameters.LogPath -Value $Message
 }
 
 function Add-LoggerStreamsTarget
@@ -172,11 +176,10 @@ function Add-LoggerHostTarget
         [Parameter(Mandatory=$true)]$Name,
         [Parameter(Mandatory=$false)]$MinLevel = "TRACE",
         [Parameter(Mandatory=$false)]$MessageFormat = "{{date}} - {{level}} - [{{stack}}] --> {{message}}",
-        [Parameter(Mandatory=$false)][switch]$Passive,
-        [Parameter(Mandatory=$false)][System.ConsoleColor]$ForegroundColor = [System.ConsoleColor]::Yellow
+        [Parameter(Mandatory=$false)][switch]$Passive
     )
 
-    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerHostTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat -Passive:$Passive -Parameters @{ForegroundColor=$ForegroundColor}
+    Add-LoggerTarget -Name $Name -Invoke ${Function:Fire-LoggerHostTarget} -MinLevel $MinLevel -MessageFormat $MessageFormat -Passive:$Passive
 }
 
 function Fire-LoggerHostTarget
@@ -184,10 +187,40 @@ function Fire-LoggerHostTarget
     Param
     (
         $Message,
-        $Parameters
+        $Level
     )
 
-    Write-Host -ForegroundColor $($Parameters.ForegroundColor) -Object $Message
+    switch ($Level)
+    {
+        "TRACE"
+        {
+            Write-Host -ForegroundColor Magenta -Object $Message
+        }
+        "DEBUG"
+        {
+            Write-Host -ForegroundColor Cyan -Object $Message
+        }
+        "INFO"
+        {
+            Write-Host -Object $Message
+        }
+        "WARN"
+        {
+            Write-Host -ForegroundColor Yellow -Object $Message
+        }
+        "ERROR"
+        {
+            Write-Host -ForegroundColor Red -Object $Message
+        }
+        "FATAL"
+        {
+            Write-Host -ForegroundColor DarkRed -Object $Message
+        }
+        default
+        {
+            Write-Host -Object $Message
+        }
+    }
 }
 
 function Write-Logger

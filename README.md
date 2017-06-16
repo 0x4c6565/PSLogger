@@ -17,13 +17,12 @@ The module has several pre-defined log targets, outlined below:
 
 This target will log to a single log file, and can be added via ``Add-FileLoggerTarget``:
 
-> Add-FileLoggerTarget [-Name] [-LogName] [-LogPath] [-MinLevel] [-MessageFormat]
+> Add-FileLoggerTarget [-Name] [-LogPath] [-MinLevel] [-MessageFormat]
 
 * ``Name``: A unique name for the target
-* ``LogName``: Name of logfile (Default: MyScript)
-* ``LogPath``: Path of log file (Default: $Env:TEMP)
-* ``MinLevel``: Minimum log level (Default: INFO)
-* ``MessageFormat``: Format of logfile (Default: {{date}} - {{level}} - [{{stack}}] --> {{message}})
+* ``LogPath``: (Optional) Path of log file (Default: $Env:TEMP\{Name}.log)
+* ``MinLevel``: (Optional) Minimum log level (Default: INFO)
+* ``MessageFormat``: (Optional) Format of logfile (Default: {{date}} - {{level}} - [{{stack}}] --> {{message}})
 * ``Passive``: (Optional) Specifies that target should be passive - target must be explicitly targeted
 
 ### Custom target
