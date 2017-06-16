@@ -24,7 +24,7 @@ This target will log to a single log file
 
 > Add-LoggerFileTarget [-Name] [-MinLevel] [-MessageFormat] [-Passive] [-LogPath]
 
-* ``LogPath``: Path of log file (Default: $Env:TEMP\{Name}.log)
+* ``LogPath``: Path of log file (Default: $Env:TEMP\\{Name}.log)
 
 ### Host Target
 
