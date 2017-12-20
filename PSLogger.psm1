@@ -385,6 +385,7 @@ function Write-LoggerFatal
 
 Export-ModuleMember -Function "Get-LoggerTarget"
 Export-ModuleMember -Function "Test-LoggerTarget"
+Export-ModuleMember -Function "Set-LoggerExceptionHandler"
 Export-ModuleMember -Function "Add-LoggerTarget"
 Export-ModuleMember -Function "Add-LoggerFileTarget"
 Export-ModuleMember -Function "Add-LoggerStreamsTarget"
