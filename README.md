@@ -46,17 +46,17 @@ More log targets can be added via ``Add-LoggerTarget``:
 
 ### Commands
 
-> Write-LoggerTrace [-Message]
+> Write-LoggerTrace [-Message] [-Target]
 
-> Write-LoggerDebug [-Message]
+> Write-LoggerDebug [-Message] [-Target]
 
-> Write-LoggerInfo [-Message]
+> Write-LoggerInfo [-Message] [-Target]
 
-> Write-LoggerWarn [-Message]
+> Write-LoggerWarn [-Message] [-Target]
 
-> Write-LoggerError [-Message]
+> Write-LoggerError [-Message] [-Target]
 
-> Write-LoggerFatal [-Message] [-ExitCode]
+> Write-LoggerFatal [-Message]  [-Target] [-ExitCode]
 
 ### Aliases
 
@@ -76,6 +76,8 @@ Aliases are also defined for writing logs:
 
 ### Examples
 
+```
 > Write-LoggerInfo "Testing log"
-
 > "an error occurred","oops" | Write-LoggerError
+> Write-LoggerWarn "Testing log file" -Target LogFile
+```
