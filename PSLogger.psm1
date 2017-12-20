@@ -1,6 +1,6 @@
 ﻿$Script:LogLevels = @("TRACE","DEBUG","INFO","WARN","ERROR")
 $Script:LoggerTargets = @()
-[scriptblock]$Script:ExceptionHander=[scriptblock]::Create("")
+[scriptblock]$Script:ExceptionHander=$null
 
 function Validate-LogLevel($Level)
 {
@@ -46,10 +46,10 @@ function Set-LoggerExceptionHandler
 {
     Param
     (
-        [Parameter(Mandatory=$true)][scriptblock]$ExceptionHandler
+        [Parameter(Mandatory=$true)][scriptblock]$Handler
     )
 
-    if ($ExceptionHandler -eq $null)
+    if ($Handler -eq $null)
     {
         throw "Invalid scriptblock"
     }
@@ -230,9 +230,11 @@ function Write-Logger
                     }
                     catch
                     {
+                        
                         if ($Script:ExceptionHander -ne $null)
                         {
-                            $Script:ExceptionHander.Invoke()
+                            $InvokeParameters = @{Target=$LoggerTarget;Exception=$_.Exception}
+                            & $Script:ExceptionHandler @InvokeParameters
                         }
                     }
                 }
