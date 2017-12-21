@@ -1,6 +1,6 @@
 ﻿$Script:LogLevels = @("TRACE","DEBUG","INFO","WARN","ERROR")
 $Script:LoggerTargets = @()
-[scriptblock]$Script:ExceptionHandler=$null
+[scriptblock]$Script:TargetExceptionHandler=$null
 
 function Validate-LogLevel($Level)
 {
@@ -42,7 +42,7 @@ function Test-LoggerTarget($Name)
     }
 }
 
-function Set-LoggerExceptionHandler
+function Set-LoggerTargetExceptionHandler
 {
     Param
     (
@@ -54,7 +54,7 @@ function Set-LoggerExceptionHandler
         throw "Invalid scriptblock"
     }
 
-    $Script:ExceptionHandler = $Handler
+    $Script:TargetExceptionHandler = $Handler
 }
 
 function Add-LoggerTarget
@@ -230,10 +230,10 @@ function Write-Logger
                     }
                     catch
                     {
-                        if ($Script:ExceptionHandler -ne $null)
+                        if ($Script:TargetExceptionHandler -ne $null)
                         {
                             $InvokeParameters = @{Target=$LoggerTarget;Exception=$_.Exception}
-                            & $Script:ExceptionHandler @InvokeParameters
+                            & $Script:TargetExceptionHandler @InvokeParameters
                         }
                     }
                 }
@@ -255,7 +255,7 @@ function Get-CallStack
     $ScriptName = ""
     if ([string]::IsNullOrEmpty($CallStack.ScriptName) -eq $false)
     {
-        $Stack += (Split-Path -Path $CallStack.ScriptName -Leaf)
+        $Stack += [System.IO.Path]::GetFileName($CallStack.ScriptName)
     }
     else
     {
@@ -384,7 +384,7 @@ function Write-LoggerFatal
 
 Export-ModuleMember -Function "Get-LoggerTarget"
 Export-ModuleMember -Function "Test-LoggerTarget"
-Export-ModuleMember -Function "Set-LoggerExceptionHandler"
+Export-ModuleMember -Function "Set-LoggerTargetExceptionHandler"
 Export-ModuleMember -Function "Add-LoggerTarget"
 Export-ModuleMember -Function "Add-LoggerFileTarget"
 Export-ModuleMember -Function "Add-LoggerStreamsTarget"
