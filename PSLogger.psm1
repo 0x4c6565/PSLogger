@@ -10,19 +10,17 @@ function Validate-LogLevel($Level)
     }
 }
 
-function Get-LoggerTarget($Name=$null)
+function Get-LoggerTarget([string]$Name)
 {
-    if ($Name -ne $null)
+    if (![string]::IsNullOrEmpty($Name))
     {
-        $FoundTargets = ($Script:LoggerTargets | ? {$_.Name -like $Name})
-        if ($FoundTargets -eq $null)
+        $FoundTarget = ($Script:LoggerTargets | ? {$_.Name -eq $Name})
+        if ($FoundTarget -eq $null)
         {
             throw "Cannot find target with name [$Name]"
         }
-        else
-        {
-            return $FoundTargets
-        }
+
+        return $FoundTarget
     }
 
     return $Script:LoggerTargets
