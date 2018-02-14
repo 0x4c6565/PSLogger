@@ -121,12 +121,12 @@ function Fire-LoggerFileTarget
 
 function Add-LoggerEmailTarget
 {
-
+    throw "not implemented"
 }
 
 function Add-LoggerRestTarget
 {
-
+    throw "not implemented"
 }
 
 function Add-LoggerHostTarget
